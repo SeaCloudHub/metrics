@@ -1,20 +1,20 @@
 # my global config
 global:
-  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
   evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
   # scrape_timeout is set to the global default (10s).
 
   # Attach these labels to any time series or alerts when communicating with
   # external systems (federation, remote storage, Alertmanager).
   external_labels:
-      monitor: 'prom-stack'
+    monitor: 'prom-stack'
 
 # Alertmanager configuration
 alerting:
   alertmanagers:
-  - static_configs:
-    - targets:
-      - alertmanager:9093
+    - static_configs:
+        - targets:
+            - alertmanager:9093
 
 # Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
 rule_files:
@@ -25,7 +25,23 @@ scrape_configs:
   - job_name: 'prom-stack'
     static_configs:
       - targets:
-        - prometheus:9090
-        - pushgateway:9091
-        - alertmanager:9093
-        - grafana:3000
+          - prometheus:9090
+          - pushgateway:9091
+          - alertmanager:9093
+          - grafana:3000
+  - job_name: 'seacloud'
+    static_configs:
+      - targets:
+          - 'kratos:4434'
+          - 'keto:4466'
+    metrics_path: '/admin/metrics/prometheus' # For kratos, ensure correct paths in individual targets
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: 'kratos:.*'
+        target_label: __metrics_path__
+        replacement: '/admin/metrics/prometheus'
+      - source_labels: [__address__]
+        regex: 'keto:.*'
+        target_label: __metrics_path__
+        replacement: '/metrics/prometheus'
+    # scheme: https  # If kratos and keto use HTTPS, otherwise remove this line
